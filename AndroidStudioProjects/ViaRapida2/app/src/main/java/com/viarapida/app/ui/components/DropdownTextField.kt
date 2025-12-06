@@ -5,16 +5,15 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -26,33 +25,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CustomTextField(
+fun DropdownTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    options: List<String>,
     modifier: Modifier = Modifier,
-    isPassword: Boolean = false,
     isError: Boolean = false,
     errorMessage: String = "",
     enabled: Boolean = true,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    singleLine: Boolean = true,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
     leadingIcon: ImageVector? = null,
     placeholder: String? = null
 ) {
-    var passwordVisible by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = { }, // No permitir escritura manual
             label = {
                 Text(
                     text = label,
@@ -68,18 +61,14 @@ fun CustomTextField(
                     )
                 }
             } else null,
-            modifier = Modifier.fillMaxWidth(),
-            isError = isError,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = enabled) {
+                    expanded = !expanded
+                },
+            readOnly = true,
             enabled = enabled,
-            singleLine = singleLine,
-            visualTransformation = if (isPassword && !passwordVisible)
-                PasswordVisualTransformation()
-            else
-                VisualTransformation.None,
-            keyboardOptions = keyboardOptions.copy(
-                imeAction = if (singleLine) ImeAction.Next else ImeAction.Default
-            ),
-            keyboardActions = keyboardActions,
+            isError = isError,
             shape = MaterialTheme.shapes.medium,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -88,7 +77,7 @@ fun CustomTextField(
                 focusedLabelColor = MaterialTheme.colorScheme.primary,
                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface
             ),
@@ -104,25 +93,41 @@ fun CustomTextField(
                     )
                 }
             } else null,
-            trailingIcon = if (isPassword) {
-                {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible)
-                                Icons.Default.Visibility
-                            else
-                                Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible)
-                                "Ocultar contraseña"
-                            else
-                                "Mostrar contraseña",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Seleccionar",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.clickable(enabled = enabled) {
+                        expanded = !expanded
                     }
-                }
-            } else null
+                )
+            }
         )
 
+        // Dropdown Menu
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = option,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+
+        // Error message
         AnimatedVisibility(
             visible = isError && errorMessage.isNotEmpty(),
             enter = fadeIn() + expandVertically(),

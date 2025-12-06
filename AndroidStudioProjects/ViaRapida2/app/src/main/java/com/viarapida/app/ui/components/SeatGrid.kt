@@ -1,5 +1,9 @@
 package com.viarapida.app.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,13 +18,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AirlineSeatReclineNormal
+import androidx.compose.material.icons.filled.Chair
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.viarapida.app.ui.theme.SeatAvailable
 import com.viarapida.app.ui.theme.SeatOccupied
@@ -38,14 +50,47 @@ fun SeatGrid(
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        // Leyenda
+        // Leyenda mejorada
         SeatLegend()
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Indicador de cabina
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Chair,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "CONDUCTOR",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Grid de asientos usando Rows normales
+        // Grid de asientos
         val seatsPerRow = Constants.SEATS_PER_ROW
-        val rows = (totalSeats + seatsPerRow - 1) / seatsPerRow // Redondear hacia arriba
+        val rows = (totalSeats + seatsPerRow - 1) / seatsPerRow
 
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -63,6 +108,11 @@ fun SeatGrid(
                             val isOccupied = seatNumber in occupiedSeats
                             val isSelected = seatNumber == selectedSeat
 
+                            // Pasillo después del segundo asiento
+                            if (colIndex == 2) {
+                                Spacer(modifier = Modifier.width(20.dp))
+                            }
+
                             SeatItem(
                                 seatNumber = seatNumber,
                                 isOccupied = isOccupied,
@@ -75,7 +125,6 @@ fun SeatGrid(
                                 modifier = Modifier.weight(1f)
                             )
                         } else {
-                            // Espacio vacío para mantener el grid alineado
                             Spacer(modifier = Modifier.weight(1f))
                         }
                     }
@@ -93,37 +142,64 @@ private fun SeatItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = when {
-        isOccupied -> SeatOccupied
-        isSelected -> SeatSelected
-        else -> SeatAvailable
-    }
+    val backgroundColor by animateColorAsState(
+        targetValue = when {
+            isOccupied -> SeatOccupied
+            isSelected -> SeatSelected
+            else -> SeatAvailable
+        },
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "seat color"
+    )
 
-    Box(
-        modifier = modifier
-            .height(70.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor)
-            .border(
-                width = 2.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable(enabled = !isOccupied) { onClick() }
-            .padding(4.dp),
-        contentAlignment = Alignment.Center
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(70.dp),
+        enabled = !isOccupied,
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor.copy(alpha = 0.2f),
+            disabledContainerColor = SeatOccupied.copy(alpha = 0.2f)
+        ),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = when {
+                isOccupied -> SeatOccupied
+                isSelected -> SeatSelected
+                else -> SeatAvailable
+            }
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 4.dp else 0.dp
+        )
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "💺",
-                style = MaterialTheme.typography.titleMedium
+            Icon(
+                imageVector = Icons.Default.AirlineSeatReclineNormal,
+                contentDescription = null,
+                tint = when {
+                    isOccupied -> SeatOccupied
+                    isSelected -> SeatSelected
+                    else -> SeatAvailable
+                },
+                modifier = Modifier.size(24.dp)
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = seatNumber.toString(),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White
+                style = MaterialTheme.typography.labelMedium,
+                color = when {
+                    isOccupied -> SeatOccupied
+                    isSelected -> SeatSelected
+                    else -> SeatAvailable
+                },
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -131,22 +207,32 @@ private fun SeatItem(
 
 @Composable
 private fun SeatLegend() {
-    Row(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        shape = MaterialTheme.shapes.medium
     ) {
-        LegendItem(
-            color = SeatAvailable,
-            label = "Disponible"
-        )
-        LegendItem(
-            color = SeatOccupied,
-            label = "Ocupado"
-        )
-        LegendItem(
-            color = SeatSelected,
-            label = "Seleccionado"
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            LegendItem(
+                color = SeatAvailable,
+                label = "Disponible"
+            )
+            LegendItem(
+                color = SeatOccupied,
+                label = "Ocupado"
+            )
+            LegendItem(
+                color = SeatSelected,
+                label = "Seleccionado"
+            )
+        }
     }
 }
 
@@ -160,14 +246,21 @@ private fun LegendItem(
     ) {
         Box(
             modifier = Modifier
-                .size(20.dp)
-                .background(color, RoundedCornerShape(4.dp))
+                .size(24.dp)
+                .clip(MaterialTheme.shapes.small)
+                .background(color.copy(alpha = 0.2f))
+                .border(
+                    width = 2.dp,
+                    color = color,
+                    shape = MaterialTheme.shapes.small
+                )
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
         )
     }
 }
