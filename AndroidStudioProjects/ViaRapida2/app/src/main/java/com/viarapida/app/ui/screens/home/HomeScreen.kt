@@ -184,23 +184,7 @@ fun HomeScreen(
                     description = "Revisa tus tickets comprados",
                     onClick = onNavigateToMyTickets
                 )
-                ActionCard(
-                    icon = Icons.Default.CreditCard,
-                    title = "Métodos de Pago",
-                    description = "Gestiona tus formas de pago",
-                    onClick = {
-                        navController.navigate(NavGraph.PaymentMethods.route)
-                    }
-                )
 
-                ActionCard(
-                    icon = Icons.Default.Receipt,
-                    title = "Historial de Transacciones",
-                    description = "Revisa tus pagos realizados",
-                    onClick = {
-                        navController.navigate(NavGraph.TransactionHistory.route)
-                    }
-                )
 
                 // Panel Admin (solo si es admin)
                 if (uiState.user?.isAdmin == true) {
@@ -232,23 +216,7 @@ fun HomeScreen(
                     }
                 )
 
-                ActionCard(
-                    icon = Icons.Default.CreditCard,
-                    title = "Métodos de Pago",
-                    description = "Gestiona tus formas de pago",
-                    onClick = {
-                        navController.navigate(NavGraph.PaymentMethods.route)
-                    }
-                )
 
-                ActionCard(
-                    icon = Icons.Default.Receipt,
-                    title = "Historial de Transacciones",
-                    description = "Revisa tus pagos realizados",
-                    onClick = {
-                        navController.navigate(NavGraph.TransactionHistory.route)
-                    }
-                )
                 if (uiState.user?.isAdmin == true) {
                     ActionCard(
                         icon = Icons.Default.AdminPanelSettings,
