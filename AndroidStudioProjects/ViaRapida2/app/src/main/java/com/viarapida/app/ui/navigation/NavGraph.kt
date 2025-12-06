@@ -17,4 +17,9 @@ sealed class NavGraph(val route: String) {
     }
     object MyTickets : NavGraph("my_tickets")
     object Admin : NavGraph("admin")
+
+    // ============ NUEVAS RUTAS DE PAGO ============
+    object PaymentMethods : NavGraph("payment_methods")
+    object AddPayment : NavGraph("add_payment")
+    object TransactionHistory : NavGraph("transaction_history")
 }

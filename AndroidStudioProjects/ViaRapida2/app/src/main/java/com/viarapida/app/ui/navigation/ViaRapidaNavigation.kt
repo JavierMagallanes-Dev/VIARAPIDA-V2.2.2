@@ -11,6 +11,9 @@ import com.viarapida.app.ui.screens.auth.LoginScreen
 import com.viarapida.app.ui.screens.auth.RegisterScreen
 import com.viarapida.app.ui.screens.home.HomeScreen
 import com.viarapida.app.ui.screens.mytickets.MyTicketsScreen
+import com.viarapida.app.ui.screens.payment.AddPaymentMethodScreen
+import com.viarapida.app.ui.screens.payment.PaymentMethodsScreen
+import com.viarapida.app.ui.screens.payment.TransactionHistoryScreen
 import com.viarapida.app.ui.screens.purchase.PurchaseScreen
 import com.viarapida.app.ui.screens.search.SearchScreen
 import com.viarapida.app.ui.screens.seats.SeatSelectionScreen
@@ -82,7 +85,8 @@ fun ViaRapidaNavigation(
                     navController.navigate(NavGraph.Login.route) {
                         popUpTo(NavGraph.Home.route) { inclusive = true }
                     }
-                }
+                },
+                navController = navController // ⬅️ NUEVO: Para navegación interna
             )
         }
 
@@ -136,6 +140,9 @@ fun ViaRapidaNavigation(
                     navController.navigate(NavGraph.TicketDetail.createRoute(ticketId)) {
                         popUpTo(NavGraph.Home.route)
                     }
+                },
+                onNavigateToAddPayment = { // ⬅️ NUEVO: Para agregar métodos de pago
+                    navController.navigate(NavGraph.AddPayment.route)
                 }
             )
         }
@@ -170,6 +177,35 @@ fun ViaRapidaNavigation(
 
         composable(NavGraph.Admin.route) {
             AdminScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // ============ NUEVAS RUTAS DE PAGO ============
+
+        composable(NavGraph.PaymentMethods.route) {
+            PaymentMethodsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToAddPayment = {
+                    navController.navigate(NavGraph.AddPayment.route)
+                }
+            )
+        }
+
+        composable(NavGraph.AddPayment.route) {
+            AddPaymentMethodScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(NavGraph.TransactionHistory.route) {
+            TransactionHistoryScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

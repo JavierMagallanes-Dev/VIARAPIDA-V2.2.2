@@ -19,8 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,11 +41,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.viarapida.app.ui.components.CustomButton
 import com.viarapida.app.ui.components.LoadingDialog
 import com.viarapida.app.ui.components.OutlinedCustomButton
+import com.viarapida.app.ui.navigation.NavGraph
 import com.viarapida.app.ui.theme.GradientEnd
 import com.viarapida.app.ui.theme.GradientStart
+
 
 @Composable
 fun HomeScreen(
@@ -51,6 +56,7 @@ fun HomeScreen(
     onNavigateToMyTickets: () -> Unit,
     onNavigateToAdmin: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    navController: NavHostController,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -178,8 +184,71 @@ fun HomeScreen(
                     description = "Revisa tus tickets comprados",
                     onClick = onNavigateToMyTickets
                 )
+                ActionCard(
+                    icon = Icons.Default.CreditCard,
+                    title = "Métodos de Pago",
+                    description = "Gestiona tus formas de pago",
+                    onClick = {
+                        navController.navigate(NavGraph.PaymentMethods.route)
+                    }
+                )
+
+                ActionCard(
+                    icon = Icons.Default.Receipt,
+                    title = "Historial de Transacciones",
+                    description = "Revisa tus pagos realizados",
+                    onClick = {
+                        navController.navigate(NavGraph.TransactionHistory.route)
+                    }
+                )
 
                 // Panel Admin (solo si es admin)
+                if (uiState.user?.isAdmin == true) {
+                    ActionCard(
+                        icon = Icons.Default.AdminPanelSettings,
+                        title = "Panel Administrador",
+                        description = "Gestiona el sistema",
+                        onClick = onNavigateToAdmin,
+                        isHighlighted = true
+                    )
+                }
+                // En HomeScreen, AGREGAR estos ActionCard:
+
+                ActionCard(
+                    icon = Icons.Default.CreditCard,
+                    title = "Métodos de Pago",
+                    description = "Gestiona tus formas de pago",
+                    onClick = {
+                        navController.navigate(NavGraph.PaymentMethods.route)
+                    }
+                )
+
+                ActionCard(
+                    icon = Icons.Default.Receipt,
+                    title = "Historial de Transacciones",
+                    description = "Revisa tus pagos realizados",
+                    onClick = {
+                        navController.navigate(NavGraph.TransactionHistory.route)
+                    }
+                )
+
+                ActionCard(
+                    icon = Icons.Default.CreditCard,
+                    title = "Métodos de Pago",
+                    description = "Gestiona tus formas de pago",
+                    onClick = {
+                        navController.navigate(NavGraph.PaymentMethods.route)
+                    }
+                )
+
+                ActionCard(
+                    icon = Icons.Default.Receipt,
+                    title = "Historial de Transacciones",
+                    description = "Revisa tus pagos realizados",
+                    onClick = {
+                        navController.navigate(NavGraph.TransactionHistory.route)
+                    }
+                )
                 if (uiState.user?.isAdmin == true) {
                     ActionCard(
                         icon = Icons.Default.AdminPanelSettings,
@@ -199,9 +268,14 @@ fun HomeScreen(
                     icon = Icons.Default.Logout
                 )
             }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+
+            }
         }
     }
-}
+
 
 @Composable
 private fun ActionCard(
@@ -281,4 +355,5 @@ private fun ActionCard(
             }
         }
     }
+
 }
