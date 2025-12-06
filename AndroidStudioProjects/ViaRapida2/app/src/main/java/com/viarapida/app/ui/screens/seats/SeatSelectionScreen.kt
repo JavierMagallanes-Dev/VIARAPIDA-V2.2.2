@@ -1,5 +1,6 @@
 package com.viarapida.app.ui.screens.seats
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,116 +69,131 @@ fun SeatSelectionScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
             // Error
             if (uiState.error.isNotEmpty()) {
-                Text(
-                    text = uiState.error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = uiState.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
-            // Información de la ruta
+            // Contenido principal
             uiState.route?.let { route ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "${route.origin} → ${route.destination}",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Salida: ${route.departureTime}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = "Precio: S/ ${String.format("%.2f", route.price)}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = "Asientos disponibles: ${route.getAvailableSeatsCount()}/${route.totalSeats}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Título del mapa
-                Text(
-                    text = "Selecciona tu asiento",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Mapa de asientos
-                SeatGrid(
-                    totalSeats = route.totalSeats,
-                    occupiedSeats = route.occupiedSeats,
-                    selectedSeat = uiState.selectedSeat,
-                    onSeatSelected = { seatNumber ->
-                        viewModel.selectSeat(seatNumber)
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Información del asiento seleccionado
-                if (uiState.selectedSeat != null) {
+                    // Información de la ruta
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     ) {
-                        Text(
-                            text = "Asiento seleccionado: ${uiState.selectedSeat}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Botón continuar
-                CustomButton(
-                    text = "Continuar",
-                    onClick = {
-                        uiState.selectedSeat?.let { seat ->
-                            onNavigateToPurchase(seat)
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "${route.origin} → ${route.destination}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Salida: ${route.departureTime}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Precio: S/ ${String.format("%.2f", route.price)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Asientos disponibles: ${route.getAvailableSeatsCount()}/${route.totalSeats}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
-                    },
-                    enabled = uiState.selectedSeat != null
-                )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Título del mapa
+                    Text(
+                        text = "Selecciona tu asiento",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Mapa de asientos (SIN LAZY - ahora será Grid simple)
+                    SeatGrid(
+                        totalSeats = route.totalSeats,
+                        occupiedSeats = route.occupiedSeats,
+                        selectedSeat = uiState.selectedSeat,
+                        onSeatSelected = { seatNumber ->
+                            viewModel.selectSeat(seatNumber)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Información del asiento seleccionado
+                    if (uiState.selectedSeat != null) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Text(
+                                text = "Asiento seleccionado: ${uiState.selectedSeat}",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    // Botón continuar
+                    CustomButton(
+                        text = "Continuar",
+                        onClick = {
+                            uiState.selectedSeat?.let { seat ->
+                                onNavigateToPurchase(seat)
+                            }
+                        },
+                        enabled = uiState.selectedSeat != null
+                    )
+
+                    // Espacio al final para que el botón no quede pegado
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
         }
     }

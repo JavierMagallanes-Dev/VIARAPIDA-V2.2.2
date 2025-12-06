@@ -23,7 +23,6 @@ class LoginViewModel(
     }
 
     fun onEmailChange(email: String) {
-        Log.d("LoginViewModel", "Email cambiado a: $email")
         _uiState.value = _uiState.value.copy(
             email = email,
             emailError = ""

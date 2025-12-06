@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,28 +43,43 @@ fun SeatGrid(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Grid de asientos
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(Constants.SEATS_PER_ROW),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        // Grid de asientos usando Rows normales
+        val seatsPerRow = Constants.SEATS_PER_ROW
+        val rows = (totalSeats + seatsPerRow - 1) / seatsPerRow // Redondear hacia arriba
+
+        Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(totalSeats) { index ->
-                val seatNumber = index + 1
-                val isOccupied = seatNumber in occupiedSeats
-                val isSelected = seatNumber == selectedSeat
+            for (rowIndex in 0 until rows) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    for (colIndex in 0 until seatsPerRow) {
+                        val seatNumber = rowIndex * seatsPerRow + colIndex + 1
 
-                SeatItem(
-                    seatNumber = seatNumber,
-                    isOccupied = isOccupied,
-                    isSelected = isSelected,
-                    onClick = {
-                        if (!isOccupied) {
-                            onSeatSelected(seatNumber)
+                        if (seatNumber <= totalSeats) {
+                            val isOccupied = seatNumber in occupiedSeats
+                            val isSelected = seatNumber == selectedSeat
+
+                            SeatItem(
+                                seatNumber = seatNumber,
+                                isOccupied = isOccupied,
+                                isSelected = isSelected,
+                                onClick = {
+                                    if (!isOccupied) {
+                                        onSeatSelected(seatNumber)
+                                    }
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            // Espacio vacío para mantener el grid alineado
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
-                )
+                }
             }
         }
     }
@@ -77,7 +90,8 @@ private fun SeatItem(
     seatNumber: Int,
     isOccupied: Boolean,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val backgroundColor = when {
         isOccupied -> SeatOccupied
@@ -86,8 +100,8 @@ private fun SeatItem(
     }
 
     Box(
-        modifier = Modifier
-            .size(70.dp)
+        modifier = modifier
+            .height(70.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor)
             .border(

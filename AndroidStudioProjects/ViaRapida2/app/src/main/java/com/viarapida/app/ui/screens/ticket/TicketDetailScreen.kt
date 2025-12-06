@@ -3,6 +3,7 @@ package com.viarapida.app.ui.screens.ticket
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -76,205 +77,212 @@ fun TicketDetailScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Error
-            if (uiState.error.isNotEmpty()) {
-                Text(
-                    text = uiState.error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Ticket
-            uiState.ticket?.let { ticket ->
-                // Mensaje de éxito
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Error
+                if (uiState.error.isNotEmpty()) {
+                    Text(
+                        text = uiState.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "✅",
-                            style = MaterialTheme.typography.displayMedium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "¡Compra exitosa!",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Código QR
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Código QR del Pasaje",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                // Ticket
+                uiState.ticket?.let { ticket ->
+                    // Mensaje de éxito
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        qrBitmap?.let { bitmap ->
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "QR Code",
-                                modifier = Modifier.size(250.dp)
-                            )
-                        } ?: run {
-                            Text(
-                                text = "Generando código QR...",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "ID: ${ticket.id.take(12)}...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Información del ticket
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
                     ) {
-                        // Estado
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Estado:",
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = "✅",
+                                style = MaterialTheme.typography.displayMedium
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = ticket.status,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = if (ticket.isActive()) StatusActive else StatusUsed
+                                text = "¡Compra exitosa!",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textAlign = TextAlign.Center
                             )
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                        // Pasajero
-                        TicketInfoRow(
-                            label = "Pasajero",
-                            value = ticket.passengerName
+                    // Código QR
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Código QR del Pasaje",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            qrBitmap?.let { bitmap ->
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "QR Code",
+                                    modifier = Modifier.size(250.dp)
+                                )
+                            } ?: run {
+                                Text(
+                                    text = "Generando código QR...",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = "ID: ${ticket.id.take(12)}...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Información del ticket
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            // Estado
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Estado:",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = ticket.status,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = if (ticket.isActive()) StatusActive else StatusUsed
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Pasajero
+                            TicketInfoRow(
+                                label = "Pasajero",
+                                value = ticket.passengerName
+                            )
+                            TicketInfoRow(
+                                label = "DNI",
+                                value = ticket.passengerDNI
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Ruta
+                            TicketInfoRow(
+                                label = "Origen",
+                                value = ticket.origin
+                            )
+                            TicketInfoRow(
+                                label = "Destino",
+                                value = ticket.destination
+                            )
+                            TicketInfoRow(
+                                label = "Salida",
+                                value = ticket.departureTime
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Asiento y precio
+                            TicketInfoRow(
+                                label = "Asiento",
+                                value = ticket.seatNumber.toString()
+                            )
+                            TicketInfoRow(
+                                label = "Precio",
+                                value = "S/ ${String.format("%.2f", ticket.price)}"
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Fecha de compra
+                            TicketInfoRow(
+                                label = "Fecha de compra",
+                                value = ticket.getFormattedPurchaseDate()
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Información adicional
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
-                        TicketInfoRow(
-                            label = "DNI",
-                            value = ticket.passengerDNI
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Ruta
-                        TicketInfoRow(
-                            label = "Origen",
-                            value = ticket.origin
-                        )
-                        TicketInfoRow(
-                            label = "Destino",
-                            value = ticket.destination
-                        )
-                        TicketInfoRow(
-                            label = "Salida",
-                            value = ticket.departureTime
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Asiento y precio
-                        TicketInfoRow(
-                            label = "Asiento",
-                            value = ticket.seatNumber.toString()
-                        )
-                        TicketInfoRow(
-                            label = "Precio",
-                            value = "S/ ${String.format("%.2f", ticket.price)}"
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Fecha de compra
-                        TicketInfoRow(
-                            label = "Fecha de compra",
-                            value = ticket.getFormattedPurchaseDate()
+                    ) {
+                        Text(
+                            text = "📱 Presenta este código QR al momento de abordar el bus.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                // Información adicional
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    // Botón volver al inicio
+                    CustomButton(
+                        text = "Volver al Inicio",
+                        onClick = onNavigateToHome
                     )
-                ) {
-                    Text(
-                        text = "📱 Presenta este código QR al momento de abordar el bus.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp)
-                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Botón volver al inicio
-                CustomButton(
-                    text = "Volver al Inicio",
-                    onClick = onNavigateToHome
-                )
             }
         }
     }
