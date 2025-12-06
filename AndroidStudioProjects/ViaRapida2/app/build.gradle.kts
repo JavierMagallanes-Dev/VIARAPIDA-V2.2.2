@@ -80,9 +80,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
 
-    // QR Code
+    // QR Code - SOLO ZXING (sin androidmads)
     implementation("com.google.zxing:core:3.5.2")
-    implementation("com.github.androidmads:QRGenerator:1.0.1")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
