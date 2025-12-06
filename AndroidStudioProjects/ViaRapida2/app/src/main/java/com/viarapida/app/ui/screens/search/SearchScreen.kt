@@ -1,40 +1,14 @@
 package com.viarapida.app.ui.screens.search
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -42,10 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.viarapida.app.ui.components.CustomButton
-import com.viarapida.app.ui.components.DropdownTextField
-import com.viarapida.app.ui.components.LoadingDialog
-import com.viarapida.app.ui.components.RouteCard
+import com.viarapida.app.ui.components.*
 import com.viarapida.app.ui.theme.GradientEnd
 import com.viarapida.app.ui.theme.GradientStart
 import com.viarapida.app.ui.utils.Constants
@@ -63,6 +34,17 @@ fun SearchScreen(
         LoadingDialog(message = "Buscando rutas...")
     }
 
+    // Bottom Sheet de Filtros
+    if (uiState.showFilters) {
+        FilterBottomSheet(
+            currentFilters = uiState.filters,
+            onFiltersChanged = { filters ->
+                viewModel.onFiltersChanged(filters)
+            },
+            onDismiss = { viewModel.toggleFilterSheet() }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,6 +57,25 @@ fun SearchScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    // Botón de filtros con badge
+                    BadgedBox(
+                        badge = {
+                            if (uiState.filters.hasActiveFilters()) {
+                                Badge {
+                                    Text("${uiState.filters.getActiveFiltersCount()}")
+                                }
+                            }
+                        }
+                    ) {
+                        IconButton(onClick = { viewModel.toggleFilterSheet() }) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = "Filtros"
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -147,7 +148,49 @@ fun SearchScreen(
                     enabled = !uiState.isLoading
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Selector de Fecha
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Column {
+                        QuickDateSelector(
+                            onDateSelected = { date ->
+                                viewModel.onDateSelected(date)
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        DateRangeSelector(
+                            selectedDate = uiState.filters.departureDate,
+                            onDateSelected = { date ->
+                                viewModel.onDateSelected(date)
+                            },
+                            onClearDate = {
+                                viewModel.onClearDate()
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Chips de filtros activos
+                AnimatedVisibility(
+                    visible = uiState.filters.hasActiveFilters(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    ActiveFiltersChips(
+                        filters = uiState.filters,
+                        onClearFilters = { viewModel.clearFilters() }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 // Error general
                 AnimatedVisibility(
@@ -182,90 +225,156 @@ fun SearchScreen(
                     exit = fadeOut()
                 ) {
                     if (uiState.routes.isEmpty()) {
-                        // No hay resultados
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                            shape = MaterialTheme.shapes.large
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(64.dp)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "No se encontraron rutas",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Intenta con otras ciudades",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
+                        // Sin resultados
+                        NoResultsCard()
                     } else {
                         // Lista de rutas
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Rutas Disponibles",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                                    ),
-                                    shape = MaterialTheme.shapes.medium
-                                ) {
-                                    Text(
-                                        text = "${uiState.routes.size}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(uiState.routes) { route ->
-                                    RouteCard(
-                                        route = route,
-                                        onSelectRoute = {
-                                            onNavigateToSeatSelection(route.id)
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        RoutesList(
+                            routes = uiState.routes,
+                            allRoutesCount = uiState.allRoutes.size,
+                            onNavigateToSeatSelection = onNavigateToSeatSelection
+                        )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActiveFiltersChips(
+    filters: com.viarapida.app.data.model.SearchFilters,
+    onClearFilters: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "🎯 ${filters.getActiveFiltersCount()} filtros activos",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    // Mostrar fecha si está seleccionada
+                    filters.departureDate?.let { date ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "📅 ${com.viarapida.app.ui.utils.DateUtils.formatDateForDisplay(date)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+
+                TextButton(onClick = onClearFilters) {
+                    Text("Limpiar todo")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NoResultsCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.SearchOff,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "No se encontraron rutas",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Intenta ajustar los filtros o buscar otras ciudades",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun RoutesList(
+    routes: List<com.viarapida.app.data.model.Route>,
+    allRoutesCount: Int,
+    onNavigateToSeatSelection: (String) -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Rutas Disponibles",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold
+            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(
+                    text = "${routes.size}/$allRoutesCount",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(routes) { route ->
+                RouteCard(
+                    route = route,
+                    onSelectRoute = {
+                        onNavigateToSeatSelection(route.id)
+                    }
+                )
             }
         }
     }
@@ -297,7 +406,6 @@ private fun SearchForm(
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            // Origen - DROPDOWN
             DropdownTextField(
                 value = origin,
                 onValueChange = onOriginChange,
@@ -312,7 +420,6 @@ private fun SearchForm(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Destino - DROPDOWN
             DropdownTextField(
                 value = destination,
                 onValueChange = onDestinationChange,
@@ -327,7 +434,6 @@ private fun SearchForm(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Sugerencia de ciudades
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -344,7 +450,6 @@ private fun SearchForm(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botón de búsqueda
             CustomButton(
                 text = "Buscar Rutas",
                 onClick = onSearch,
