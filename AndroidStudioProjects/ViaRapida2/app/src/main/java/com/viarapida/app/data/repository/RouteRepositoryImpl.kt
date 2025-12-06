@@ -4,6 +4,7 @@ import android.util.Log
 import com.viarapida.app.data.model.BusType
 import com.viarapida.app.data.model.Route
 import com.viarapida.app.data.remote.FirebaseClient
+import com.viarapida.app.utils.RouteDataImporter
 import kotlinx.coroutines.tasks.await
 
 class RouteRepositoryImpl : RouteRepository {
@@ -131,9 +132,114 @@ class RouteRepositoryImpl : RouteRepository {
             Result.failure(e)
         }
     }
+
+    // ============ NUEVAS FUNCIONES ============
+
+    /**
+     * 🚀 IMPORTACIÓN MASIVA DE RUTAS
+     * Usa RouteDataImporter para crear 100+ rutas automáticamente
+     */
+    override suspend fun importMassiveRoutes(): Result<Unit> {
+        return try {
+            Log.d(TAG, "🚀 Iniciando importación masiva de rutas...")
+
+            val importer = RouteDataImporter()
+            val result = importer.importAllRoutes()
+
+            result.onSuccess {
+                Log.d(TAG, "✅ Importación masiva completada exitosamente")
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Error en importación masiva: ${error.message}", error)
+                return Result.failure(error)
+            }
+
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "💥 Error general en importación masiva: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * 🗑️ LIMPIAR TODAS LAS RUTAS
+     * Útil para reiniciar la base de datos
+     */
+    suspend fun deleteAllRoutes(): Result<Unit> {
+        return try {
+            Log.d(TAG, "🗑️ Eliminando todas las rutas...")
+
+            val snapshot = firestore.collection(ROUTES_COLLECTION)
+                .get()
+                .await()
+
+            var deletedCount = 0
+            snapshot.documents.forEach { doc ->
+                doc.reference.delete().await()
+                deletedCount++
+            }
+
+            Log.d(TAG, "✅ Rutas eliminadas: $deletedCount")
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error eliminando rutas: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * 📊 OBTENER ESTADÍSTICAS DE RUTAS
+     */
+    suspend fun getRoutesStats(): Result<RouteStats> {
+        return try {
+            Log.d(TAG, "📊 Obteniendo estadísticas de rutas...")
+
+            val snapshot = firestore.collection(ROUTES_COLLECTION)
+                .get()
+                .await()
+
+            val routes = snapshot.documents.mapNotNull { Route.fromFirestore(it) }
+
+            val stats = RouteStats(
+                totalRoutes = routes.size,
+                activeRoutes = routes.count { it.isActive },
+                totalSeats = routes.sumOf { it.totalSeats },
+                occupiedSeats = routes.sumOf { it.occupiedSeats.size },
+                routesByOrigin = routes.groupBy { it.origin }
+                    .mapValues { it.value.size },
+                routesByBusType = routes.groupBy { it.busType.name }
+                    .mapValues { it.value.size },
+                averagePrice = routes.map { it.price }.average(),
+                averageOccupancy = (routes.sumOf { it.occupiedSeats.size }.toDouble() /
+                        routes.sumOf { it.totalSeats }) * 100
+            )
+
+            Log.d(TAG, "✅ Estadísticas obtenidas: $stats")
+            Result.success(stats)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error obteniendo estadísticas: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    // ============ FUNCIÓN ORIGINAL (MANTENER PARA COMPATIBILIDAD) ============
+
     override suspend fun createInitialRoutes(): Result<Unit> {
         return try {
-            Log.d(TAG, "Creando rutas iniciales con nuevos campos")
+            Log.d(TAG, "Creando rutas iniciales (método legacy)")
+
+            // Verificar si ya existen rutas
+            val existingRoutes = firestore.collection(ROUTES_COLLECTION)
+                .limit(1)
+                .get()
+                .await()
+
+            if (!existingRoutes.isEmpty) {
+                Log.d(TAG, "⚠️ Ya existen rutas en la base de datos, saltando creación")
+                return Result.success(Unit)
+            }
 
             val initialRoutes = listOf(
                 // Lima - Ayacucho
@@ -143,7 +249,7 @@ class RouteRepositoryImpl : RouteRepository {
                     departureTime = "09:00 PM",
                     arrivalTime = "05:00 AM",
                     departureDate = "2025-12-10",
-                    durationMinutes = 480, // 8 horas
+                    durationMinutes = 480,
                     price = 50.0,
                     busType = BusType.SEMICAMA,
                     rating = 4.5,
@@ -191,7 +297,6 @@ class RouteRepositoryImpl : RouteRepository {
                     occupiedSeats = emptyList(),
                     isActive = true
                 ),
-
                 // Ayacucho - Lima
                 Route(
                     origin = "Ayacucho",
@@ -228,104 +333,6 @@ class RouteRepositoryImpl : RouteRepository {
                     totalSeats = 40,
                     occupiedSeats = emptyList(),
                     isActive = true
-                ),
-
-                // Ayacucho - Huancayo
-                Route(
-                    origin = "Ayacucho",
-                    destination = "Huancayo",
-                    departureTime = "06:00 AM",
-                    arrivalTime = "12:00 PM",
-                    departureDate = "2025-12-12",
-                    durationMinutes = 360, // 6 horas
-                    price = 30.0,
-                    busType = BusType.STANDARD,
-                    rating = 4.3,
-                    totalReviews = 67,
-                    amenities = listOf("Baño"),
-                    company = "ViaRapida Regional",
-                    busPlate = "HYO-123",
-                    totalSeats = 40,
-                    occupiedSeats = emptyList(),
-                    isActive = true
-                ),
-                Route(
-                    origin = "Ayacucho",
-                    destination = "Huancayo",
-                    departureTime = "02:00 PM",
-                    arrivalTime = "08:00 PM",
-                    departureDate = "2025-12-12",
-                    durationMinutes = 360,
-                    price = 35.0,
-                    busType = BusType.SEMICAMA,
-                    rating = 4.4,
-                    totalReviews = 45,
-                    amenities = listOf("WiFi", "Baño", "AC"),
-                    company = "ViaRapida Confort",
-                    busPlate = "HYO-456",
-                    totalSeats = 36,
-                    occupiedSeats = emptyList(),
-                    isActive = true
-                ),
-
-                // Huancayo - Ayacucho
-                Route(
-                    origin = "Huancayo",
-                    destination = "Ayacucho",
-                    departureTime = "07:00 AM",
-                    arrivalTime = "01:00 PM",
-                    departureDate = "2025-12-13",
-                    durationMinutes = 360,
-                    price = 30.0,
-                    busType = BusType.STANDARD,
-                    rating = 4.1,
-                    totalReviews = 72,
-                    amenities = listOf("Baño"),
-                    company = "ViaRapida Regional",
-                    busPlate = "AYA-987",
-                    totalSeats = 40,
-                    occupiedSeats = emptyList(),
-                    isActive = true
-                ),
-
-                // Ayacucho - Cusco
-                Route(
-                    origin = "Ayacucho",
-                    destination = "Cusco",
-                    departureTime = "09:00 PM",
-                    arrivalTime = "09:00 AM",
-                    departureDate = "2025-12-14",
-                    durationMinutes = 720, // 12 horas
-                    price = 80.0,
-                    busType = BusType.CAMA,
-                    rating = 4.7,
-                    totalReviews = 103,
-                    amenities = listOf("WiFi", "Baño", "TV", "AC", "USB", "Mantas"),
-                    company = "ViaRapida Imperial",
-                    busPlate = "CUZ-123",
-                    totalSeats = 28,
-                    occupiedSeats = emptyList(),
-                    isActive = true
-                ),
-
-                // Lima - Arequipa (vía Ayacucho)
-                Route(
-                    origin = "Lima",
-                    destination = "Arequipa",
-                    departureTime = "06:00 PM",
-                    arrivalTime = "10:00 AM",
-                    departureDate = "2025-12-15",
-                    durationMinutes = 960, // 16 horas
-                    price = 100.0,
-                    busType = BusType.CAMA,
-                    rating = 4.9,
-                    totalReviews = 187,
-                    amenities = listOf("WiFi", "Baño", "TV", "AC", "USB", "Comida"),
-                    company = "ViaRapida Premium",
-                    busPlate = "AQP-123",
-                    totalSeats = 24,
-                    occupiedSeats = emptyList(),
-                    isActive = true
                 )
             )
 
@@ -344,3 +351,17 @@ class RouteRepositoryImpl : RouteRepository {
         }
     }
 }
+
+/**
+ * 📊 Modelo de estadísticas de rutas
+ */
+data class RouteStats(
+    val totalRoutes: Int,
+    val activeRoutes: Int,
+    val totalSeats: Int,
+    val occupiedSeats: Int,
+    val routesByOrigin: Map<String, Int>,
+    val routesByBusType: Map<String, Int>,
+    val averagePrice: Double,
+    val averageOccupancy: Double
+)

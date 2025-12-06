@@ -1,34 +1,19 @@
 package com.viarapida.app.ui.screens.admin
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,7 +59,69 @@ fun AdminScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Error
+            // IMPORTACIÓN MASIVA
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🚀",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Importación Masiva",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                text = "Importa 100+ rutas automáticamente",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { viewModel.importMassiveRoutes() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Icon(Icons.Default.Upload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Importar Rutas Ahora")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "⚠️ Esto creará ~120 rutas para los próximos 30 días. Solo ejecutar una vez.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ERROR
             if (uiState.error.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -95,7 +142,7 @@ fun AdminScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Estadísticas
+            // ESTADÍSTICAS
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -103,9 +150,7 @@ fun AdminScreen(
                 )
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) {
                     Text(
                         text = "📊 Estadísticas",
@@ -114,29 +159,15 @@ fun AdminScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    StatRow(
-                        label = "Total de pasajes",
-                        value = uiState.totalTickets.toString(),
-                        emoji = "🎫"
-                    )
-                    StatRow(
-                        label = "Pasajes activos",
-                        value = uiState.activeTickets.toString(),
-                        emoji = "✅",
-                        valueColor = StatusActive
-                    )
-                    StatRow(
-                        label = "Pasajes usados",
-                        value = uiState.usedTickets.toString(),
-                        emoji = "✔️",
-                        valueColor = StatusUsed
-                    )
+                    StatRow("Total de pasajes", uiState.totalTickets.toString(), "🎫")
+                    StatRow("Pasajes activos", uiState.activeTickets.toString(), "✅", StatusActive)
+                    StatRow("Pasajes usados", uiState.usedTickets.toString(), "✔️", StatusUsed)
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Lista de tickets
+            // TÍTULO LISTA
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -154,8 +185,8 @@ fun AdminScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // LISTA DE TICKETS
             if (uiState.tickets.isEmpty() && !uiState.isLoading) {
-                // Sin tickets
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -198,7 +229,7 @@ private fun StatRow(
     label: String,
     value: String,
     emoji: String,
-    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer
+    valueColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -206,16 +237,9 @@ private fun StatRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = emoji,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(text = emoji, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Text(label, style = MaterialTheme.typography.bodyMedium)
         }
         Text(
             text = value,
@@ -238,16 +262,11 @@ private fun AdminTicketCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Encabezado
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "ID: ${ticket.id.take(8)}...",
@@ -263,23 +282,15 @@ private fun AdminTicketCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Información
-            TicketInfoRow(label = "Pasajero", value = ticket.passengerName)
-            TicketInfoRow(label = "DNI", value = ticket.passengerDNI)
-            TicketInfoRow(label = "Usuario", value = ticket.userName)
-            TicketInfoRow(
-                label = "Ruta",
-                value = "${ticket.origin} → ${ticket.destination}"
-            )
-            TicketInfoRow(label = "Salida", value = ticket.departureTime)
-            TicketInfoRow(label = "Asiento", value = ticket.seatNumber.toString())
-            TicketInfoRow(
-                label = "Precio",
-                value = "S/ ${String.format("%.2f", ticket.price)}"
-            )
-            TicketInfoRow(label = "Compra", value = ticket.getFormattedPurchaseDate())
+            TicketInfoRow("Pasajero", ticket.passengerName)
+            TicketInfoRow("DNI", ticket.passengerDNI)
+            TicketInfoRow("Usuario", ticket.userName)
+            TicketInfoRow("Ruta", "${ticket.origin} → ${ticket.destination}")
+            TicketInfoRow("Salida", ticket.departureTime)
+            TicketInfoRow("Asiento", ticket.seatNumber.toString())
+            TicketInfoRow("Precio", "S/ ${String.format("%.2f", ticket.price)}")
+            TicketInfoRow("Compra", ticket.getFormattedPurchaseDate())
 
-            // Botón de acción
             if (ticket.isActive()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 TextButton(
@@ -306,8 +317,7 @@ private fun TicketInfoRow(label: String, value: String) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.bodySmall
         )
     }
     Spacer(modifier = Modifier.height(4.dp))

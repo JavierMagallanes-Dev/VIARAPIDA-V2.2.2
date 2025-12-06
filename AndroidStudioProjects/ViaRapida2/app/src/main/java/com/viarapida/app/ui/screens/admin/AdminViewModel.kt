@@ -79,6 +79,32 @@ class AdminViewModel(
                 }
         }
     }
+    fun importMassiveRoutes() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = "")
+
+            Log.d(TAG, "🚀 Importando rutas masivamente...")
+
+            val routeRepository = AppModule.provideRouteRepository()
+
+            routeRepository.importMassiveRoutes()
+                .onSuccess {
+                    Log.d(TAG, "✅ Rutas importadas exitosamente")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = ""
+                    )
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "❌ Error importando rutas: ${error.message}", error)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Error al importar: ${error.message}"
+                    )
+                }
+        }
+    }
+
 }
 
 data class AdminUiState(
